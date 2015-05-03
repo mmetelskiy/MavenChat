@@ -15,8 +15,7 @@ import java.util.ArrayList;
 
 
 public class Servlet extends HttpServlet {
-
-    private static Connection connection = null;
+    protected static Connection connection = null;
 
     public Servlet() {
         connection = DatabaseConnection.setupDBConnection();
@@ -28,6 +27,25 @@ public class Servlet extends HttpServlet {
     }
 
     @Override
+    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        try {
+            BufferedReader br = request.getReader();
+            JSONParser parser = new JSONParser();
+            try {
+                JSONObject jsonObject = (JSONObject)parser.parse(br.readLine());
+                int messageId = Integer.parseInt((String)((JSONObject)jsonObject.get("message")).get("messageId"));
+                String messageText = (String)((JSONObject)jsonObject.get("message")).get("messageText");
+                changeMessage(messageId, messageText);
+                addMessageChange(messageId, messageText);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         addMessage(request);
     }
@@ -36,236 +54,17 @@ public class Servlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String type = request.getParameter("type");
 
-        if(type.compareTo("BASE_REQUEST")==0){
-            String username = request.getParameter("username");
-            int id = getUserId(connection, username);
-            if(id == -1)
-                id = addNewUser(connection, username);
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("currentUserId", id);
-            jsonObject.put("messageToken", 0);
-            jsonObject.put("messageEditToken", 0);
-            jsonObject.put("messageDeleteToken", 0);
-            jsonObject.put("userToken", 0);
-            jsonObject.put("userChangeToken", 0);
-
-            sendResponse(response, jsonObject.toJSONString());
+        if(type.compareTo("BASE_REQUEST")==0) {
+            BaseRequest.proceedBaseRequest(request, response, connection);
         }
-        else if(type.compareTo("GET_UPDATE")==0){
-            int messageId = Integer.parseInt(request.getParameter("messageToken"));
-            int messageEditId = Integer.parseInt(request.getParameter("messageEditToken"));
-            int messageDeletedId = Integer.parseInt(request.getParameter("messageDeleteToken"));
-            int userId = Integer.parseInt(request.getParameter("userToken"));
-            int userChangeId = Integer.parseInt(request.getParameter("userChangeToken"));
-
-            JSONObject jsonObject = new JSONObject();
-
-            jsonObject.put("messageToken", getRowsNumber("messages"));
-            jsonObject.put("messages", getMessages(messageId));
-
-            jsonObject.put("messageEditToken", getRowsNumber("message_changes"));
-            jsonObject.put("editedMessages", getEditedMessages(messageEditId));
-
-            jsonObject.put("messageDeleteToken", getRowsNumber("message_deletions"));
-            jsonObject.put("deletedMessagesIds", getDeletedMessages(messageDeletedId));
-
-            jsonObject.put("userToken", getRowsNumber("users"));
-            jsonObject.put("users", getUsers(userId));
-
-            jsonObject.put("userChangeToken", getRowsNumber("username_changes"));
-            jsonObject.put("changedUsers", getChangedUsers(userChangeId));
-
-            sendResponse(response, jsonObject.toJSONString());
-
+        else if(type.compareTo("GET_UPDATE")==0) {
+            UpdateRequest.proceedUpdateRequest(request, response);
         }
-        else{
+        else {
             System.out.println("Unsupported type.");
         }
+
         request.getRequestDispatcher("/homepage.jsp").forward(request, response);
-    }
-
-
-    public int getUserId(Connection connection, String username){
-        try {
-            String sql = "SELECT * FROM users WHERE username=\'" + username + "\'";
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(sql);
-            if(resultSet.isBeforeFirst()){
-                resultSet.next();
-                return Integer.parseInt(resultSet.getString("id"));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return -1;
-    }
-
-
-    public int addNewUser(Connection connection, String username){
-        int id = getRowsNumber("users") + 1;
-        String sql = "INSERT INTO users(username, id) VALUES(?, ?)";
-        PreparedStatement preparedStatement = null;
-        try {
-            preparedStatement = connection.prepareStatement(sql);
-            preparedStatement.setString(1, username);
-            preparedStatement.setInt(2, id);
-            preparedStatement.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return id;
-    }
-
-
-    public int getRowsNumber(String tableName){
-        try {
-            Statement maxId = connection.createStatement();
-            ResultSet resultSet = maxId.executeQuery("SELECT COUNT(*) FROM " + tableName);
-            resultSet.next();
-            return Integer.parseInt(resultSet.getString(1));
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return 0;
-    }
-
-
-    public String getTableUpdate(Connection connection, int lastId, String tableName,
-                               ArrayList<String> colomns, String mainColomn){
-        String sql = "SELECT * from " + tableName + " WHERE " + mainColomn + " > " + lastId;
-        try {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(sql);
-            JSONArray jsonArray = new JSONArray();
-            while(resultSet.next()) {
-                JSONObject tempObject = new JSONObject();
-                for (String colomn: colomns)
-                    tempObject.put(colomn, resultSet.getString(colomn));
-                jsonArray.add(tempObject);
-            }
-            return jsonArray.toJSONString();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-
-    public String getMessages(int messageId){
-        String sql = "SELECT * from messages WHERE message_id > " + messageId;
-        try {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(sql);
-            JSONArray jsonArray = new JSONArray();
-            while(resultSet.next()) {
-                JSONObject tempObject = new JSONObject();
-                tempObject.put("userId", resultSet.getString("user_id"));
-                tempObject.put("messageId", resultSet.getString("message_id"));
-                tempObject.put("messageText", resultSet.getString("message_text"));
-                tempObject.put("messageTime", resultSet.getString("message_time"));
-                tempObject.put("isDeleted", resultSet.getString("is_deleted"));
-                jsonArray.add(tempObject);
-            }
-            return jsonArray.toJSONString();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-
-    public String getEditedMessages(int messageEditId){
-        String sql = "SELECT * from message_changes WHERE id > " + messageEditId;
-        try {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(sql);
-            JSONArray jsonArray = new JSONArray();
-            while(resultSet.next()) {
-                JSONObject tempObject = new JSONObject();
-                tempObject.put("messageId", resultSet.getString("message_id"));
-                tempObject.put("messageText", resultSet.getString("message_text"));
-                jsonArray.add(tempObject);
-            }
-            return jsonArray.toJSONString();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-
-    public String getDeletedMessages(int messageDeletedId){
-        String sql = "SELECT * from message_deletions WHERE id > " + messageDeletedId;
-        try {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(sql);
-            JSONArray jsonArray = new JSONArray();
-            while(resultSet.next()) {
-                jsonArray.add(resultSet.getString("message_id"));
-            }
-            return jsonArray.toJSONString();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-
-    public String getUsers(int userId){
-        String sql = "SELECT * from users WHERE id > " + userId;
-        try {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(sql);
-            JSONArray jsonArray = new JSONArray();
-            while(resultSet.next()) {
-                JSONObject tempObject = new JSONObject();
-                tempObject.put("userId", resultSet.getString("id"));
-                tempObject.put("username", resultSet.getString("username"));
-                tempObject.put("userImage", "icon/doge.jpg");
-                jsonArray.add(tempObject);
-            }
-            return jsonArray.toJSONString();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-
-    public String getChangedUsers(int userChangeId){
-        String sql = "SELECT * from username_changes WHERE id > " + userChangeId;
-        try {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(sql);
-            JSONArray jsonArray = new JSONArray();
-            while(resultSet.next()) {
-                JSONObject tempObject = new JSONObject();
-                tempObject.put("userId", resultSet.getString("id"));
-                tempObject.put("username", resultSet.getString("username"));
-                tempObject.put("userImage", "icon/doge.jpg");
-                jsonArray.add(tempObject);
-            }
-            return jsonArray.toJSONString();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-
-    public void sendResponse(HttpServletResponse response, String jsonObject) {
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        PrintWriter out = null;
-        try {
-            out = response.getWriter();
-            out.println(jsonObject);
-            out.flush();
-            out.close();
-        } catch (IOException e) {
-            System.out.println("Sending response error.");
-            e.printStackTrace();
-        }
     }
 
 
@@ -292,7 +91,7 @@ public class Servlet extends HttpServlet {
             preparedStatement.setString(1, messageText);
             preparedStatement.setString(2, getUsernameById(userId));
             preparedStatement.setString(3, ((Long) System.currentTimeMillis()).toString());
-            preparedStatement.setInt(4, getRowsNumber("messages")+1);
+            preparedStatement.setInt(4, Util.getRowsNumber("messages")+1);
             preparedStatement.setInt(5, 0);
             preparedStatement.setInt(6, userId);
             preparedStatement.executeUpdate();
@@ -325,7 +124,7 @@ public class Servlet extends HttpServlet {
             try {
                 JSONArray jsonArray = (JSONArray)parser.parse(br.readLine());
                 for (Object s: jsonArray){
-                    int newId = getRowsNumber("message_deletions") + 1;
+                    int newId = Util.getRowsNumber("message_deletions") + 1;
                     String sql = "INSERT INTO message_deletions (id, message_id) VALUES (?, ?)";
                     String markAsDeleted = "UPDATE messages SET is_deleted='" + 1 + "' WHERE message_id=" + Integer.parseInt((String)s);
                     PreparedStatement preparedStatement = null;
@@ -348,12 +147,33 @@ public class Servlet extends HttpServlet {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
 
+    public void changeMessage(int messageId, String messageText) {
+        String sql = "UPDATE messages SET message_text='" + messageText + "' WHERE message_id=" + messageId;
+        try {
+            Statement statement = connection.createStatement();
+            statement.executeUpdate(sql);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 
 
+    public void addMessageChange(int messageId, String messageText) {
+        String sql = "INSERT INTO message_changes (message_text, message_id, id)" + "VALUES (?, ?, ?)";
+        PreparedStatement preparedStatement = null;
+        try {
+            preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setString(1, messageText);
+            preparedStatement.setInt(2, messageId);
+            preparedStatement.setInt(3, Util.getRowsNumber("message_changes")+1);
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 
 
 
@@ -498,28 +318,7 @@ public class Servlet extends HttpServlet {
     }
 
 
-    public void addChangeChange(HttpServletRequest request, Connection connection) {
-        int id = getLastChangeId(connection)+1;
-        int idToChange = Integer.parseInt(request.getParameter("id"));
-        String message = request.getParameter("newMessage");
-        String time = request.getParameter("newTime");
-        String creator = request.getParameter("creator");
-        String sql = "INSERT INTO message_changes (type, message_text, creator, time, message_id, id)" + "VALUES (?, ?, ?, ?, ?, ?)";
-        PreparedStatement preparedStatement = null;
-        try {
-            preparedStatement = connection.prepareStatement(sql);
-            preparedStatement.setString(1, "CHANGE_MESSAGE");
-            preparedStatement.setString(2, message);
-            preparedStatement.setString(3, creator);
-            preparedStatement.setString(4, time);
-            preparedStatement.setInt(5, idToChange);
-            preparedStatement.setInt(6, id);
-            preparedStatement.executeUpdate();
-            System.out.println("Insert into changes done.");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
+
 
 
     public void addInsertChange(HttpServletRequest request, Connection connection, int newId) {

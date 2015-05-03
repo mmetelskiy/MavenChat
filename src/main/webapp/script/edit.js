@@ -55,7 +55,6 @@ function editMessage(messageNode) {
 					"messageText":text
 				}
 		};
-		alert('PUT:\n' + body);
 
 		var xhr = new XMLHttpRequest();
 		xhr.open('PUT', host + port + adr, true);

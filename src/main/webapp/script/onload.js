@@ -5,8 +5,8 @@ document.body.onload = function() {
 function startGettingMessages() {
 	timer = setTimeout(function func() {
 		doGet();
-		timer = setTimeout(func, 1000);
-	}, 1000);
+		timer = setTimeout(func, 500);
+	}, 500);
 }
 
 function stopGettingMessages() {
