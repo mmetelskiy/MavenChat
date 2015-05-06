@@ -5,8 +5,8 @@ document.body.onload = function() {
 function startGettingMessages() {
 	timer = setTimeout(function func() {
 		doGet();
-		timer = setTimeout(func, 5000);
-	}, 5000);
+		timer = setTimeout(func, 1000);
+	}, 1000);
 }
 
 function stopGettingMessages() {
@@ -38,9 +38,37 @@ function doGet() {
                             "username":user.username,
                             "userImage":user.userImage
                         };
+
+						if(usernameId == user.userId) {
+							if(user.username) {
+								setUsername(user.username);
+							}
+							if(user.userImage) {
+								get('img').style.backgroundImage = 'url(' + user.userImage + ')';
+							}
+						}
                     });
+
+
                 }
 
+				if(resp.userChangeToken) {
+					userChangeToken = resp.userChangeToken;
+					JSON.parse(resp.changedUsers).forEach(function(user) {
+						users[user.userId] = {
+							"username":user.username,
+							"userImage":user.userImage
+						};
+						if(usernameId == user.userId) {
+							if(user.username) {
+								setUsername(user.username);
+							}
+							if(user.userImage) {
+								get('img').style.backgroundImage = 'url(' + user.userImage + ')';
+							}
+						}
+					});
+				}
 
 				if(resp.messageToken) {
 					messageToken = resp.messageToken;

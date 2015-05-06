@@ -1,4 +1,4 @@
-function setUsername(user) {
+function setUsername(username) {
 	get('userdiv').innerText = username;
 	get('userdiv').style.display = '';
 }

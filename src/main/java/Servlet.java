@@ -40,9 +40,13 @@ public class Servlet extends HttpServlet {
             } catch (ParseException e) {
                 e.printStackTrace();
             }
+            finally {
+                br.close();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
 
     @Override
@@ -80,6 +84,9 @@ public class Servlet extends HttpServlet {
                 messageText = (String)jsonObject.get("messageText");
             } catch (ParseException e) {
                 e.printStackTrace();
+            }
+            finally {
+                br.close();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -131,7 +138,7 @@ public class Servlet extends HttpServlet {
                     Statement delete = null;
                     try {
                         delete = connection.createStatement();
-                        delete.executeQuery(markAsDeleted);
+                        delete.executeUpdate(markAsDeleted);
                         preparedStatement = connection.prepareStatement(sql);
                         preparedStatement.setInt(1, newId);
                         preparedStatement.setInt(2, Integer.parseInt((String)s));
@@ -143,6 +150,9 @@ public class Servlet extends HttpServlet {
                 }
             } catch (ParseException e) {
                 e.printStackTrace();
+            }
+            finally {
+                br.close();
             }
         } catch (IOException e) {
             e.printStackTrace();

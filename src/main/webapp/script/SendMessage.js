@@ -8,6 +8,8 @@ function MessageNode(message) {
 	<div class="edit-button"></div>
 </div>
 */
+	var msgNode = create('div', 'message');
+
 	var img = create('div', 'message-img');
 	img.setAttribute('usernameId', message.userId);
 	img.style.backgroundImage = 'url(' + users[message.userId].userImage + ')';
@@ -25,7 +27,6 @@ function MessageNode(message) {
 	var date = new Date(+message.messageTime);
 	time.innerHTML = date.toLocaleTimeString() + "<br>" + date.toLocaleDateString();
 
-	var msgNode = create('div', 'message');
 	msgNode.id = message.messageId;
 
 	msgNode.appendChild(img);

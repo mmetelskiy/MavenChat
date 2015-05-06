@@ -8,6 +8,7 @@ function deleteSelected() {
 
 			if(xhr.readyState == 4) {
 				selectedMessages = [];
+				checkDeleteButtonState();
 			}
 		}
 		else {
@@ -20,8 +21,11 @@ function makeMessageDeleted(messageId) {
 	var msgNode = get(messageId);
 	var editButton = msgNode.getElementsByClassName('edit-button')[0];
 
-	msgNode.removeChild(editButton);
+	if(editButton) {
+		msgNode.removeChild(editButton);
+	}
 	msgNode.classList.add('deleted-message');
+	msgNode.classList.remove('selected-message');
 
 	setMessageText(messageId, 'Message was deleted...');
 }
