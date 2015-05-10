@@ -1,7 +1,7 @@
 Chat project for exadel.
 
 Authors:
-ms. Jirkevich
+ms. Zhirkevich
 mr. Metelskiy
 mr. Berikbaev
 mr. Shestakov
