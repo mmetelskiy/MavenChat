@@ -2,6 +2,12 @@ package database;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+import javax.servlet.http.HttpServletRequest;
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.sql.*;
 
 
@@ -19,6 +25,33 @@ public class UsersTable {
             e.printStackTrace();
         }
         return -1;
+    }
+
+
+    public static String getUserImageUrlById(int id, Connection connection){
+        try {
+            String sql = "SELECT * FROM users WHERE id=\'" + id + "\'";
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(sql);
+            if(resultSet.isBeforeFirst()){
+                resultSet.next();
+                return resultSet.getString("image_url");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    public static void setUserImageUrlById(int id, String userImageUrl, Connection connection){
+        String sql = "UPDATE users SET image_url='" + userImageUrl + "' WHERE id=" + id;
+        try {
+            Statement statement = connection.createStatement();
+            statement.executeUpdate(sql);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -48,7 +81,7 @@ public class UsersTable {
                 JSONObject tempObject = new JSONObject();
                 tempObject.put("userId", resultSet.getString("id"));
                 tempObject.put("username", resultSet.getString("username"));
-                tempObject.put("userImage", "icon/doge.jpg");
+                tempObject.put("userImage", resultSet.getString("image_url"));//"icon/doge.jpg");
                 jsonArray.add(tempObject);
             }
             return jsonArray.toJSONString();

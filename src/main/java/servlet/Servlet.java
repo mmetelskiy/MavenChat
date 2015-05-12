@@ -38,8 +38,17 @@ public class Servlet extends HttpServlet {
             try {
                 JSONObject jsonObject = (JSONObject)parser.parse(br.readLine());
                 type = (String)jsonObject.get("type");
-                if(type.compareTo("CHANGE_MESSAGE")==0)
-                    MessagesTable.changeMessage(request, connection, br);
+                if(type.compareTo("CHANGE_MESSAGE")==0) {
+                    int messageId = Integer.parseInt((String) ((JSONObject) jsonObject.get("message")).get("messageId"));
+                    String messageText = (String)((JSONObject)jsonObject.get("message")).get("messageText");
+                    MessagesTable.changeMessage(connection, messageId, messageText);
+                }
+                if(type.compareTo("CHANGE_USER_IMAGE")==0) {
+                    int id = ((Long)((JSONObject)jsonObject.get("struct")).get("id")).intValue();
+                    String url = (String)((JSONObject)jsonObject.get("struct")).get("url");
+                    UsernameChangesTable.changeUserImage(id, url, connection);
+                    UsersTable.setUserImageUrlById(id, url, connection);
+                }
                 if(type.compareTo("CHANGE_USERNAME")==0) {
                     int userId = ((Long)((JSONObject)jsonObject.get("user")).get("userId")).intValue();
                     String username = (String)((JSONObject)jsonObject.get("user")).get("username");

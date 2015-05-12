@@ -21,17 +21,20 @@
 	<div id="exit">Exit</div>
 </div>
 <div id="bottom">
-	<div id="img"></div>
+	<div id="img" onclick="callCloudinaryUploader()"></div>
 	<textarea id="textarea" placeholder="Enter your message"></textarea>
 	<div id="send-message-button">Send</div>
 </div>
 
 <button id="shluhiIzPodvorotni3">BUTTON</button>
 
+<script src="//widget.cloudinary.com/global/all.js" type="text/javascript"></script>
 
 <script type="text/javascript" src="script/script.js"></script>
 <script type="text/javascript" src="script/username.js"></script>
 
+<script type="text/javascript" src="script/Cloudinary.js"></script>
+<script type="text/javascript" src="script/ChangeUserImage.js"></script>
 <script type="text/javascript" src="script/SendMessage.js"></script>
 <script type="text/javascript" src="script/KeyListener.js"></script>
 <script type="text/javascript" src="script/Selection.js"></script>

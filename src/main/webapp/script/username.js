@@ -12,9 +12,12 @@ function UsernameForm() {
 
     var p = create('p');
     p.innerText = 'Username:';
+
     var input = create('input');
     input.type = 'text';
     input.placeholder = 'Enter username';
+
+
     var button = create('button');
     button.innerText = 'Enter';
 

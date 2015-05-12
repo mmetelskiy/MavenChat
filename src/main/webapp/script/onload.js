@@ -65,6 +65,11 @@ function doGet() {
                             }
                             if(user.userImage) {
                                 get('img').style.backgroundImage = 'url(' + user.userImage + ')';
+                                var divs = document.querySelectorAll('[usernameId="' + user.userId + '"]');
+                                divs.forEach = [].forEach;
+                                divs.forEach(function(div) {
+                                    div.style.backgroundImage = 'url(' + user.userImage + ')';
+                                });
                             }
                         }
                     });

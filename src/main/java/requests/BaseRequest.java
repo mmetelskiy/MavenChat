@@ -21,6 +21,7 @@ public class BaseRequest {
         jsonObject.put("messageDeleteToken", 0);
         jsonObject.put("userToken", 0);
         jsonObject.put("userChangeToken", 0);
+        jsonObject.put("userImageUrl", UsersTable.getUserImageUrlById(id, connection));
         Util.sendResponse(response, jsonObject.toJSONString());
     }
 }

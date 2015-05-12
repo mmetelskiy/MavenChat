@@ -34,7 +34,7 @@ public class MessagesTable {
     }
 
     public static void changeMessageText(int messageId, String messageText, Connection connection) {
-        String sql = "UPDATE messages SET message_text='" + messageText + "' WHERE message_id=" + messageId;
+        String sql = "UPDATE messages SET message_text='" + messageText + "' WHERE message_id=" + messageId + " ORDER BY message_id";
         try {
             Statement statement = connection.createStatement();
             statement.executeUpdate(sql);
@@ -77,17 +77,9 @@ public class MessagesTable {
     }
 
 
-    public static void changeMessage(HttpServletRequest request, Connection connection, BufferedReader br) throws IOException {
-        JSONParser parser = new JSONParser();
-        try {
-            JSONObject jsonObject = (JSONObject)parser.parse(br.readLine());
-            int messageId = Integer.parseInt((String)((JSONObject)jsonObject.get("message")).get("messageId"));
-            String messageText = (String)((JSONObject)jsonObject.get("message")).get("messageText");
-            changeMessageText(messageId, messageText, connection);
-            //weak moment
-            MessageChangesTable.addMessageChange(messageId, messageText, connection);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
+    public static void changeMessage(Connection connection, int messageId, String messageText) {
+        changeMessageText(messageId, messageText, connection);
+        //weak moment
+        MessageChangesTable.addMessageChange(messageId, messageText, connection);
     }
 }
