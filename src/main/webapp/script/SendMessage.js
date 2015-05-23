@@ -68,7 +68,7 @@ function sendMessage() {
     }
 
     var body = JSON.stringify(new MessageToPost(text));
-
+    alert("send message");
     var xhr = new XMLHttpRequest();
     xhr.open('POST', host + port + adr, true);
     xhr.send(body);
@@ -78,6 +78,7 @@ function sendMessage() {
 
             if(xhr.readyState == 4) {
                 textarea.value = '';
+                alert("message sent");
             }
         }
         else {

@@ -11,8 +11,8 @@ import java.sql.*;
 
 
 public class MessagesTable {
-    public static String getMessages(int messageId, Connection connection){
-        String sql = "SELECT * from messages WHERE message_id > " + messageId;
+    public static String getMessages(int messageLastId, Connection connection){
+        String sql = "SELECT * from messages WHERE message_id > " + messageLastId;
         try {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(sql);

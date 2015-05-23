@@ -6,8 +6,8 @@ import java.sql.*;
 
 
 public class MessageChangesTable {
-    public static String getEditedMessages(int messageEditId, Connection connection){
-        String sql = "SELECT * from message_changes WHERE id > " + messageEditId;
+    public static String getEditedMessages(int messageLastEditId, Connection connection){
+        String sql = "SELECT * from message_changes WHERE id > " + messageLastEditId;
         try {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(sql);

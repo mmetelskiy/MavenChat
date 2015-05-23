@@ -1,33 +1,43 @@
 package servlet;
 
 import connection.DatabaseConnection;
-import database.*;
+import database.MessageDeletionsTable;
+import database.MessagesTable;
+import database.UsernameChangesTable;
+import database.UsersTable;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import requests.BaseRequest;
 import requests.UpdateRequest;
 
+import javax.servlet.AsyncContext;
+import javax.servlet.AsyncEvent;
+import javax.servlet.AsyncListener;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.sql.*;
+import java.sql.Connection;
 
-
+@WebServlet(name = "Servlet", urlPatterns = {"/Servlet"}, asyncSupported = true)
 public class Servlet extends HttpServlet {
     protected static Connection connection = null;
+    ContextsContainer contextContainer = null;
+    public static boolean firstGetUpdate = true;
 
     public Servlet() {
         connection = DatabaseConnection.setupDBConnection();
+        contextContainer = new ContextsContainer();
     }
 
     @Override
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         MessageDeletionsTable.deleteMessage(request, connection);
+        contextContainer.executeAllContexts(connection);
     }
 
     @Override
@@ -42,18 +52,21 @@ public class Servlet extends HttpServlet {
                     int messageId = Integer.parseInt((String) ((JSONObject) jsonObject.get("message")).get("messageId"));
                     String messageText = (String)((JSONObject)jsonObject.get("message")).get("messageText");
                     MessagesTable.changeMessage(connection, messageId, messageText);
+                    contextContainer.executeAllContexts(connection);
                 }
                 if(type.compareTo("CHANGE_USER_IMAGE")==0) {
                     int id = ((Long)((JSONObject)jsonObject.get("struct")).get("id")).intValue();
                     String url = (String)((JSONObject)jsonObject.get("struct")).get("url");
                     UsernameChangesTable.changeUserImage(id, url, connection);
                     UsersTable.setUserImageUrlById(id, url, connection);
+                    contextContainer.executeAllContexts(connection);
                 }
                 if(type.compareTo("CHANGE_USERNAME")==0) {
                     int userId = ((Long)((JSONObject)jsonObject.get("user")).get("userId")).intValue();
                     String username = (String)((JSONObject)jsonObject.get("user")).get("username");
                     UsernameChangesTable.changeUsername(userId, username, connection);
                     UsersTable.changeUsernameById(userId, username, connection);
+                    contextContainer.executeAllContexts(connection);
                 }
             } catch (ParseException e) {
                 e.printStackTrace();
@@ -65,21 +78,57 @@ public class Servlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        System.out.println("Message to post");
         MessagesTable.addMessage(request, connection);
+        System.out.println("Message posted");
+        contextContainer.executeAllContexts(connection);
+        System.out.println("all contexts executed");
+        contextContainer.clearContainer();
+        System.out.println("container cleared");
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String type = request.getParameter("type");
-        if(type.compareTo("BASE_REQUEST")==0) {
+        if(type.compareTo("BASE_REQUEST") == 0) {
             BaseRequest.proceedBaseRequest(request, response, connection);
+            firstGetUpdate = true;
         }
         else if(type.compareTo("GET_UPDATE")==0) {
-            UpdateRequest.proceedUpdateRequest(request, response, connection);
+            if(firstGetUpdate) {
+                System.out.println("firstGetUpdate");
+                UpdateRequest.proceedUpdateRequest(request, response, connection);
+                firstGetUpdate = false;
+            }
+            else{
+                System.out.println("notFirstGetUpdate");
+                AsyncContext ac = request.startAsync();
+                ac.addListener(new AsyncListener() {
+                    @Override
+                    public void onComplete(AsyncEvent event) throws IOException {
+                        System.out.println("Async complete");
+                    }
+
+                    @Override
+                    public void onTimeout(AsyncEvent event) throws IOException {
+                        System.out.println("Timed out...");
+                    }
+
+                    @Override
+                    public void onError(AsyncEvent event) throws IOException {
+                        System.out.println("Error...");
+                    }
+
+                    @Override
+                    public void onStartAsync(AsyncEvent event) throws IOException {
+                        System.out.println("Starting async...");
+                    }
+                });
+                contextContainer.addContext(ac);
+            }
         }
         else {
             System.out.println("Unsupported type.");
         }
-        request.getRequestDispatcher("/homepage.jsp").forward(request, response);
     }
 }

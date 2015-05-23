@@ -12,8 +12,8 @@ import java.sql.*;
 
 
 public class MessageDeletionsTable {
-    public static String getDeletedMessages(int messageDeletedId, Connection connection){
-        String sql = "SELECT * from message_deletions WHERE id > " + messageDeletedId;
+    public static String getDeletedMessages(int messageLastDeletedId, Connection connection){
+        String sql = "SELECT * from message_deletions WHERE id > " + messageLastDeletedId;
         try {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(sql);

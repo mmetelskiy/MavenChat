@@ -66,7 +66,7 @@ function showUsernameForm(isChanging) {
 
     function enter(username) {
         var params = '?type=BASE_REQUEST&username=' + username;
-
+        alert('base request');
         var xhr = new XMLHttpRequest();
         xhr.open('GET', host + port + adr + params, true);
         xhr.send();
@@ -85,6 +85,8 @@ function showUsernameForm(isChanging) {
                     document.body.removeChild(background);
                     textarea.focus();
                     startGettingMessages();
+
+
                 }
             }
             else {
@@ -101,7 +103,7 @@ function showUsernameForm(isChanging) {
         requestBody.user.userId = usernameId;
         requestBody.user.username = username;
 
-        alert('PUT-request:\n' + JSON.stringify(requestBody));
+        //alert('PUT-request:\n' + JSON.stringify(requestBody));
 
         var xhr = new XMLHttpRequest();
         xhr.open('PUT', host + port + adr, true);

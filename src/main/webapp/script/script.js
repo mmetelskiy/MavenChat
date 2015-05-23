@@ -31,3 +31,5 @@ var userChangeToken;
 var host = "http://localhost";
 var port = ":8080";
 var adr = "/Servlet";
+
+var gettingMessages = false;
