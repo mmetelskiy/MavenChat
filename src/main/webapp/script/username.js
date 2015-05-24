@@ -66,7 +66,7 @@ function showUsernameForm(isChanging) {
 
     function enter(username) {
         var params = '?type=BASE_REQUEST&username=' + username;
-        alert('base request');
+        //alert('base request');
         var xhr = new XMLHttpRequest();
         xhr.open('GET', host + port + adr + params, true);
         xhr.send();
@@ -84,9 +84,9 @@ function showUsernameForm(isChanging) {
                     userChangeToken = resp.userChangeToken;
                     document.body.removeChild(background);
                     textarea.focus();
+
+                    firstUpdateRequest = true;
                     startGettingMessages();
-
-
                 }
             }
             else {

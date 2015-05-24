@@ -2,14 +2,9 @@ document.body.onload = function() {
     showUsernameForm();
 };
 
-
 function startGettingMessages() {
     gettingMessages = true;
     doGet();
-    /*timer = setTimeout(function func() {
-        doGet();
-        timer = setTimeout(func, 1000);
-    }, 1000);*/
 }
 
 function stopGettingMessages() {
@@ -17,13 +12,21 @@ function stopGettingMessages() {
 }
 
 function doGet() {
-    alert("DOGET");
+    //alert("DOGET");
     var params = 	'?type=GET_UPDATE' +
         '&messageToken=' + messageToken +
         '&messageEditToken=' + messageEditToken +
         '&messageDeleteToken=' + messageDeleteToken +
         '&userToken=' + userToken +
         '&userChangeToken=' + userChangeToken;
+
+    if(firstUpdateRequest){
+        params += '&firstUpdateRequest=true';
+        firstUpdateRequest = false;
+    }
+    else{
+        params += '&firstUpdateRequest=false';
+    }
 
     var xhr = new XMLHttpRequest();
     xhr.open('GET', host + port + adr + params, true);
@@ -119,7 +122,7 @@ function doGet() {
                         }
                     });
                 }
-                alert("Upload made!");
+                //alert("Upload made!");
                 if(gettingMessages){
                     setTimeout(doGet, 0);
                 }

@@ -35,4 +35,8 @@ public class UpdateRequest {
 
         Util.sendResponse(response, jsonObject.toJSONString());
     }
+
+    public static boolean hasNullTokens(HttpServletRequest request){
+        return request.getParameter("firstUpdateRequest").compareTo("true") == 0;
+    }
 }

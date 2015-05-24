@@ -5,6 +5,8 @@ import database.MessageDeletionsTable;
 import database.MessagesTable;
 import database.UsernameChangesTable;
 import database.UsersTable;
+import longPolling.AsyncContextListener;
+import longPolling.ContextsContainer;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -27,7 +29,6 @@ import java.sql.Connection;
 public class Servlet extends HttpServlet {
     protected static Connection connection = null;
     ContextsContainer contextContainer = null;
-    public static boolean firstGetUpdate = true;
 
     public Servlet() {
         connection = DatabaseConnection.setupDBConnection();
@@ -38,6 +39,7 @@ public class Servlet extends HttpServlet {
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         MessageDeletionsTable.deleteMessage(request, connection);
         contextContainer.executeAllContexts(connection);
+        contextContainer.clearContainer();
     }
 
     @Override
@@ -53,6 +55,7 @@ public class Servlet extends HttpServlet {
                     String messageText = (String)((JSONObject)jsonObject.get("message")).get("messageText");
                     MessagesTable.changeMessage(connection, messageId, messageText);
                     contextContainer.executeAllContexts(connection);
+                    contextContainer.clearContainer();
                 }
                 if(type.compareTo("CHANGE_USER_IMAGE")==0) {
                     int id = ((Long)((JSONObject)jsonObject.get("struct")).get("id")).intValue();
@@ -60,6 +63,7 @@ public class Servlet extends HttpServlet {
                     UsernameChangesTable.changeUserImage(id, url, connection);
                     UsersTable.setUserImageUrlById(id, url, connection);
                     contextContainer.executeAllContexts(connection);
+                    contextContainer.clearContainer();
                 }
                 if(type.compareTo("CHANGE_USERNAME")==0) {
                     int userId = ((Long)((JSONObject)jsonObject.get("user")).get("userId")).intValue();
@@ -67,6 +71,7 @@ public class Servlet extends HttpServlet {
                     UsernameChangesTable.changeUsername(userId, username, connection);
                     UsersTable.changeUsernameById(userId, username, connection);
                     contextContainer.executeAllContexts(connection);
+                    contextContainer.clearContainer();
                 }
             } catch (ParseException e) {
                 e.printStackTrace();
@@ -78,13 +83,9 @@ public class Servlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        System.out.println("Message to post");
         MessagesTable.addMessage(request, connection);
-        System.out.println("Message posted");
         contextContainer.executeAllContexts(connection);
-        System.out.println("all contexts executed");
         contextContainer.clearContainer();
-        System.out.println("container cleared");
     }
 
     @Override
@@ -92,38 +93,16 @@ public class Servlet extends HttpServlet {
         String type = request.getParameter("type");
         if(type.compareTo("BASE_REQUEST") == 0) {
             BaseRequest.proceedBaseRequest(request, response, connection);
-            firstGetUpdate = true;
         }
         else if(type.compareTo("GET_UPDATE")==0) {
-            if(firstGetUpdate) {
-                System.out.println("firstGetUpdate");
+            if(UpdateRequest.hasNullTokens(request)) {
                 UpdateRequest.proceedUpdateRequest(request, response, connection);
-                firstGetUpdate = false;
             }
-            else{
+            else {
                 System.out.println("notFirstGetUpdate");
-                AsyncContext ac = request.startAsync();
-                ac.addListener(new AsyncListener() {
-                    @Override
-                    public void onComplete(AsyncEvent event) throws IOException {
-                        System.out.println("Async complete");
-                    }
-
-                    @Override
-                    public void onTimeout(AsyncEvent event) throws IOException {
-                        System.out.println("Timed out...");
-                    }
-
-                    @Override
-                    public void onError(AsyncEvent event) throws IOException {
-                        System.out.println("Error...");
-                    }
-
-                    @Override
-                    public void onStartAsync(AsyncEvent event) throws IOException {
-                        System.out.println("Starting async...");
-                    }
-                });
+                AsyncContext ac = request.startAsync(request, response);
+                ac.addListener(new AsyncContextListener());
+                ac.setTimeout(3600000);
                 contextContainer.addContext(ac);
             }
         }
@@ -132,3 +111,5 @@ public class Servlet extends HttpServlet {
         }
     }
 }
+
+

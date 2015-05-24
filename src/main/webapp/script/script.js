@@ -33,3 +33,4 @@ var port = ":8080";
 var adr = "/Servlet";
 
 var gettingMessages = false;
+var firstUpdateRequest = false;

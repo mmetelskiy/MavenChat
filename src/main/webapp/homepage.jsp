@@ -26,8 +26,6 @@
 	<div id="send-message-button">Send</div>
 </div>
 
-<button id="shluhiIzPodvorotni3">BUTTON</button>
-
 <script src="//widget.cloudinary.com/global/all.js" type="text/javascript"></script>
 
 <script type="text/javascript" src="script/script.js"></script>
