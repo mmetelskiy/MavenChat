@@ -99,7 +99,6 @@ public class Servlet extends HttpServlet {
                 UpdateRequest.proceedUpdateRequest(request, response, connection);
             }
             else {
-                System.out.println("notFirstGetUpdate");
                 AsyncContext ac = request.startAsync(request, response);
                 ac.addListener(new AsyncContextListener());
                 ac.setTimeout(3600000);
