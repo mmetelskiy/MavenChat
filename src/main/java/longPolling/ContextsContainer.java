@@ -11,16 +11,26 @@ import java.util.List;
 
 
 public class ContextsContainer {
-    List<AsyncContext> contexts = Collections.synchronizedList(new ArrayList<AsyncContext>());
+    private static List<AsyncContext> contexts = Collections.synchronizedList(new ArrayList<AsyncContext>());
+    private static List<AsyncContext> tempContexts = Collections.synchronizedList(new ArrayList<AsyncContext>());
+    private static boolean contextsExecutingInProcess = false;
 
     public void addContext(AsyncContext context){
-        contexts.add(context);
+        if(contextsExecutingInProcess)
+            tempContexts.add(context);
+        else
+            contexts.add(context);
         System.out.println("context added");
-        System.out.println("Size= " + contexts.size());
+        System.out.println("C Size= " + contexts.size());
+        System.out.println("TC Size= " + tempContexts.size() + "\n");
     }
 
     public void clearContainer(){
         contexts.clear();
+        System.out.println("Cleared. Size= " + contexts.size() + "\n");
+        for (AsyncContext ac: tempContexts)
+            contexts.add(ac);
+        tempContexts.clear();
     }
 
     public int getSize(){
@@ -28,6 +38,7 @@ public class ContextsContainer {
     }
 
     public void executeAllContexts(Connection connection){
+        contextsExecutingInProcess = true;
         System.out.println("Executing contexts");
         System.out.println("Size= " + contexts.size());
         for (AsyncContext context: contexts){
@@ -39,6 +50,7 @@ public class ContextsContainer {
             System.out.println("Context completed");
         }
         System.out.println("Contexts executed \n");
+        contextsExecutingInProcess = false;
     }
 
 }

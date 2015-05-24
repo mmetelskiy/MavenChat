@@ -28,7 +28,7 @@ import java.sql.Connection;
 @WebServlet(name = "Servlet", urlPatterns = {"/Servlet"}, asyncSupported = true)
 public class Servlet extends HttpServlet {
     protected static Connection connection = null;
-    ContextsContainer contextContainer = null;
+    protected static ContextsContainer contextContainer = null;
 
     public Servlet() {
         connection = DatabaseConnection.setupDBConnection();
