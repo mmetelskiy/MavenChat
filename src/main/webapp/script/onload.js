@@ -12,7 +12,6 @@ function stopGettingMessages() {
 }
 
 function doGet() {
-    //alert("DOGET");
     var params = 	'?type=GET_UPDATE' +
         '&messageToken=' + messageToken +
         '&messageEditToken=' + messageEditToken +
@@ -28,110 +27,7 @@ function doGet() {
         params += '&firstUpdateRequest=false';
     }
 
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', host + port + adr + params, true);
-    xhr.send();
-    xhr.onreadystatechange = function() {
-        if(xhr.status == 200) {
-            showServerState(true);
-
-            if(xhr.readyState == 4) {
-                var resp = JSON.parse(xhr.responseText);
-
-                if(resp.userToken) {
-                    userToken = resp.userToken;
-                    JSON.parse(resp.users).forEach(function(user) {
-                        users[user.userId] = {
-                            "username":user.username,
-                            "userImage":user.userImage
-                        };
-
-                        if(usernameId == user.userId) {
-                            if(user.username) {
-                                setUsername(user.username);
-                            }
-                            if(user.userImage) {
-                                get('img').style.backgroundImage = 'url(' + user.userImage + ')';
-                            }
-                        }
-                    });
-
-
-                }
-
-                if(resp.userChangeToken) {
-                    userChangeToken = resp.userChangeToken;
-                    JSON.parse(resp.changedUsers).forEach(function(user) {
-                        users[user.userId] = {
-                            "username":user.username,
-                            "userImage":user.userImage
-                        };
-                        if(usernameId == user.userId) {
-                            if(user.username) {
-                                setUsername(user.username);
-                            }
-                            if(user.userImage) {
-                                get('img').style.backgroundImage = 'url(' + user.userImage + ')';
-                                var divs = document.querySelectorAll('[usernameId="' + user.userId + '"]');
-                                divs.forEach = [].forEach;
-                                divs.forEach(function(div) {
-                                    div.style.backgroundImage = 'url(' + user.userImage + ')';
-                                });
-                            }
-                        }
-                    });
-                }
-
-                if(resp.messageToken) {
-                    messageToken = resp.messageToken;
-                    JSON.parse(resp.messages).forEach(function(message) {
-                        drawMessage(message);
-                    });
-                }
-
-                if(resp.messageEditToken) {
-                    messageEditToken = resp.messageEditToken;
-                    JSON.parse(resp.editedMessages).forEach(function(editing) {
-                        setMessageText(editing.messageId, editing.messageText);
-                    });
-                }
-
-                if(resp.messageDeleteToken) {
-                    messageDeleteToken = resp.messageDeleteToken;
-                    JSON.parse(resp.deletedMessagesIds).forEach(function(id) {
-                        makeMessageDeleted(id);
-                    });
-                }
-
-
-
-                if(resp.userChangeToken) {
-                    userChangeToken = resp.userChangeToken;
-                    JSON.parse(resp.changedUsers).forEach(function(user) {
-                        users[user.userId] = {
-                            "username":user.username,
-                            "userImage":user.userImage
-                        };
-                        if(usernameId == user.userId) {
-                            if(user.username) {
-                                setUsername(user.username);
-                            }
-                            if(user.userImage) {
-
-                            }
-                        }
-                    });
-                }
-                //alert("Upload made!");
-                if(gettingMessages){
-                    setTimeout(doGet, 0);
-                }
-            }
-        }
-        else {
-            showServerState(false);
-        }
-    }
+    ajax('GET', adress + params, null, updateMsgs);
 }
 
 function setMessageText(messageId, text) {
@@ -148,5 +44,92 @@ function drawMessage(message) {
 function clearMessageContainer() {
     while(messages.firstElementChild != emptyDiv) {
         messages.removeChild(messages.firstElementChild);
+    }
+}
+
+function updateMsgs(resp) {
+    if(resp.userToken) {
+        userToken = resp.userToken;
+        JSON.parse(resp.users).forEach(function(user) {
+            users[user.userId] = {
+                "username":user.username,
+                "userImage":user.userImage
+            };
+
+            if(usernameId == user.userId) {
+                if(user.username) {
+                    setUsername(user.username);
+                }
+                if(user.userImage) {
+                    get('img').style.backgroundImage = 'url(' + user.userImage + ')';
+                }
+            }
+        });
+    }
+
+    if(resp.userChangeToken) {
+        userChangeToken = resp.userChangeToken;
+        JSON.parse(resp.changedUsers).forEach(function(user) {
+            users[user.userId] = {
+                "username":user.username,
+                "userImage":user.userImage
+            };
+            if(usernameId == user.userId) {
+                if(user.username) {
+                    setUsername(user.username);
+                }
+                if(user.userImage) {
+                    get('img').style.backgroundImage = 'url(' + user.userImage + ')';
+                    var divs = document.querySelectorAll('[usernameId="' + user.userId + '"]');
+                    divs.forEach = [].forEach;
+                    divs.forEach(function(div) {
+                        div.style.backgroundImage = 'url(' + user.userImage + ')';
+                    });
+                }
+            }
+        });
+    }
+
+    if(resp.messageToken) {
+        messageToken = resp.messageToken;
+        JSON.parse(resp.messages).forEach(function(message) {
+            drawMessage(message);
+        });
+    }
+
+    if(resp.messageEditToken) {
+        messageEditToken = resp.messageEditToken;
+        JSON.parse(resp.editedMessages).forEach(function(editing) {
+            setMessageText(editing.messageId, editing.messageText);
+        });
+    }
+
+    if(resp.messageDeleteToken) {
+        messageDeleteToken = resp.messageDeleteToken;
+        JSON.parse(resp.deletedMessagesIds).forEach(function(id) {
+            makeMessageDeleted(id);
+        });
+    }
+
+    if(resp.userChangeToken) {
+        userChangeToken = resp.userChangeToken;
+        JSON.parse(resp.changedUsers).forEach(function(user) {
+            users[user.userId] = {
+                "username":user.username,
+                "userImage":user.userImage
+            };
+            if(usernameId == user.userId) {
+                if(user.username) {
+                    setUsername(user.username);
+                }
+                if(user.userImage) {
+
+                }
+            }
+        });
+    }
+
+    if(gettingMessages){
+        setTimeout(doGet, 0);
     }
 }

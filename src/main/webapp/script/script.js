@@ -9,6 +9,27 @@ function create(element, className) {
     return el;
 }
 
+function ajax(type, url, data, onReadyState4, onBadStatus) {
+    var xhr = new XMLHttpRequest();
+    xhr.open(type, url, true);
+    xhr.send(data);
+
+    xhr.onreadystatechange = function() {
+        if(xhr.status == 200) {
+            showServerState(true);
+            if(xhr.readyState == 4) {
+                onReadyState4(xhr.responseText ? JSON.parse(xhr.responseText) : '');
+            }
+        }
+        else {
+            if(onBadStatus)
+                onBadStatus();
+            else
+                showServerState(false);
+        }
+    }
+}
+
 var usernameId = '';
 var selectedMessages = [];
 
@@ -31,6 +52,7 @@ var userChangeToken;
 var host = "http://localhost";
 var port = ":8080";
 var adr = "/Servlet";
+var adress = host + port + adr;
 
 var gettingMessages = false;
 var firstUpdateRequest = false;

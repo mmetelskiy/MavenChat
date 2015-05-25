@@ -1,46 +1,24 @@
 function MessageNode(message) {
-    /*
-     <div class="message" id=123>
-     <div class="message-img" usernameId="Id"></div>
-     <div class="message-text"></div>
-     <time></time>
-
-     <div class="edit-button"></div>
-     </div>
-     */
     var msgNode = create('div', 'message');
-
-    var img = create('div', 'message-img');
-    img.setAttribute('usernameId', message.userId);
-    img.style.backgroundImage = 'url(' + users[message.userId].userImage + ')';
-
-    var text = create('div', 'message-text');
-    if(message.isDeleted == 1) {
-        msgNode.classList.add('deleted-message');
-        text.innerText = 'Message was deleted';
-    }
-    else {
-        text.innerHTML = message.messageText;
-    }
-
-    var time = create('time');
-    var date = new Date(+message.messageTime);
-    time.innerHTML = date.toLocaleTimeString() + "<br>" + date.toLocaleDateString();
-
     msgNode.id = message.messageId;
-
-    msgNode.appendChild(img);
-    msgNode.appendChild(text);
-    msgNode.appendChild(time);
-
-    if(usernameId == message.userId) {
+    var isDeleted = message.isDeleted == 1 ? 1 : 0;
+    var isMy = (usernameId == message.userId);
+    if(isMy) {
         msgNode.classList.add('my-message');
-
-        if(message.isDeleted == 0) {
-            var editButton = create('div', 'edit-button');
-            msgNode.appendChild(editButton);
-        }
     }
+    if(isDeleted) {
+        msgNode.classList.add('deleted-message');
+    }
+    var imgUrlStr = 'url(' + users[message.userId].userImage + ')';
+    var text = isDeleted ? 'Message was deleted...' : message.messageText;
+    var date = new Date(+message.messageTime);
+    var timeHTML = date.toLocaleTimeString() + "<br>" + date.toLocaleDateString();
+
+    msgNode.innerHTML =
+        '<div class="message-img" usernameId="' + message.userId + '" style="background-image:' + imgUrlStr + ';"></div>' +
+        '<div class="message-text">' + text + '</div>' +
+        '<time>' + timeHTML + '</time>' +
+        (isMy && !isDeleted ? '<div class="edit-button"></div>' : '');
 
     return msgNode;
 }
@@ -59,6 +37,9 @@ function sendMessage() {
             "messageText":text
         };
     }
+    function onSuccess() {
+        textarea.value = '';
+    }
 
     var text = textarea.value;
     text = addLineDividers(text);
@@ -68,21 +49,5 @@ function sendMessage() {
     }
 
     var body = JSON.stringify(new MessageToPost(text));
-    //alert("send message");
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', host + port + adr, true);
-    xhr.send(body);
-    xhr.onreadystatechange = function() {
-        if(xhr.status == 200) {
-            showServerState(true);
-
-            if(xhr.readyState == 4) {
-                textarea.value = '';
-                //alert("message sent");
-            }
-        }
-        else {
-            showServerState(false);
-        }
-    }
+    ajax('POST', adress, body, onSuccess);
 }

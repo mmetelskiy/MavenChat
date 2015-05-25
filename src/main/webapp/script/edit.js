@@ -17,6 +17,7 @@ function editMessage(messageNode) {
         if(startEditing) {
             sendButton.innerText = 'save';
             bottomPosition += 135;
+            //bottom.style.bottom -= pageYOffset;
             bottom.style.position = 'absolute';
             bottom.style.bottom = 'calc(100% - ' + bottomPosition + 'px)';
             bottom.style.zIndex = 1001;
@@ -56,22 +57,6 @@ function editMessage(messageNode) {
                 "messageText":text
             }
         };
-
-        var xhr = new XMLHttpRequest();
-        xhr.open('PUT', host + port + adr, true);
-        xhr.send(JSON.stringify(body));
-        xhr.onreadystatechange = function() {
-
-            if(xhr.status == 200) {
-                showServerState(true);
-
-                if(xhr.readyState == 4) {
-                    transformBottom(false);
-                }
-            }
-            else {
-                showServerState(false);
-            }
-        }
+        ajax('PUT', adress, JSON.stringify(body), function() {transformBottom(false);});
     }
 }

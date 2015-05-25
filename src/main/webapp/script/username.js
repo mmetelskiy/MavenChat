@@ -9,22 +9,16 @@ function Background() {
 
 function UsernameForm() {
     var container = create('div', 'entering');
-
     var p = create('p');
     p.innerText = 'Username:';
-
     var input = create('input');
     input.type = 'text';
     input.placeholder = 'Enter username';
-
-
     var button = create('button');
     button.innerText = 'Enter';
-
     container.appendChild(p);
     container.appendChild(input);
     container.appendChild(button);
-
     return {
         "container":container,
         "input":input,
@@ -65,61 +59,36 @@ function showUsernameForm(isChanging) {
     }
 
     function enter(username) {
-        var params = '?type=BASE_REQUEST&username=' + username;
-        //alert('base request');
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', host + port + adr + params, true);
-        xhr.send();
-        xhr.onreadystatechange = function() {
-            if(xhr.status == 200) {
-                showServerState(true);
+        function setStartVars(resp) {
+            usernameId = resp.currentUserId;
+            messageToken = resp.messageToken;
+            messageEditToken = resp.messageEditToken;
+            messageDeleteToken = resp.messageDeleteToken;
+            userToken = resp.userToken;
+            userChangeToken = resp.userChangeToken;
+            document.body.removeChild(background);
+            textarea.focus();
 
-                if(xhr.readyState == 4) {
-                    var resp = JSON.parse(xhr.responseText);
-                    usernameId = resp.currentUserId;
-                    messageToken = resp.messageToken;
-                    messageEditToken = resp.messageEditToken;
-                    messageDeleteToken = resp.messageDeleteToken;
-                    userToken = resp.userToken;
-                    userChangeToken = resp.userChangeToken;
-                    document.body.removeChild(background);
-                    textarea.focus();
-
-                    firstUpdateRequest = true;
-                    startGettingMessages();
-                }
-            }
-            else {
-                showServerState(false);
-            }
+            firstUpdateRequest = true;
+            startGettingMessages();
         }
+        var params = '?type=BASE_REQUEST&username=' + username;
+        ajax('GET', adress + params, null, setStartVars);
     }
 
 
     function changeUsername(username) {
+        function hideBackground() {
+            get('userdiv').style.display = '';
+            document.body.removeChild(background);
+            textarea.focus();
+        }
         var requestBody = {};
         requestBody.type = "CHANGE_USERNAME";
         requestBody.user = {};
         requestBody.user.userId = usernameId;
         requestBody.user.username = username;
 
-        //alert('PUT-request:\n' + JSON.stringify(requestBody));
-
-        var xhr = new XMLHttpRequest();
-        xhr.open('PUT', host + port + adr, true);
-        xhr.send(JSON.stringify(requestBody));
-        xhr.onreadystatechange = function() {
-            if(xhr.status == 200) {
-                showServerState(true);
-
-                if(xhr.readyState == 4) {
-                    document.body.removeChild(background);
-                    textarea.focus();
-                }
-            }
-            else {
-                showServerState(false);
-            }
-        }
+        ajax('PUT', adress, JSON.stringify(requestBody), hideBackground);
     }
 }
